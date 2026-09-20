@@ -6,6 +6,13 @@
   },
   "private": true,
   "scripts": {
-    "typecheck": "npx --yes --package typescript@5.8.3 tsc --noEmit -p tsconfig.json"
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "typecheck:tests": "tsc --noEmit -p tests/tsconfig.json",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.7"
   }
 }
