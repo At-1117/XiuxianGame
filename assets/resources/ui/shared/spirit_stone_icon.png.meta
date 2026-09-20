@@ -1,0 +1,134 @@
+{
+  "ver": "1.0.27",
+  "importer": "image",
+  "imported": true,
+  "uuid": "f1206fb2-e649-499b-8be6-3687f7869d04",
+  "files": [
+    ".json",
+    ".png"
+  ],
+  "subMetas": {
+    "6c48a": {
+      "importer": "texture",
+      "uuid": "f1206fb2-e649-499b-8be6-3687f7869d04@6c48a",
+      "displayName": "spirit_stone_icon",
+      "id": "6c48a",
+      "name": "texture",
+      "userData": {
+        "wrapModeS": "clamp-to-edge",
+        "wrapModeT": "clamp-to-edge",
+        "imageUuidOrDatabaseUri": "f1206fb2-e649-499b-8be6-3687f7869d04",
+        "isUuid": true,
+        "visible": false,
+        "minfilter": "linear",
+        "magfilter": "linear",
+        "mipfilter": "none",
+        "anisotropy": 0
+      },
+      "ver": "1.0.22",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "f9941": {
+      "importer": "sprite-frame",
+      "uuid": "f1206fb2-e649-499b-8be6-3687f7869d04@f9941",
+      "displayName": "spirit_stone_icon",
+      "id": "f9941",
+      "name": "spriteFrame",
+      "userData": {
+        "trimThreshold": 1,
+        "rotated": false,
+        "offsetX": -0.5,
+        "offsetY": -2,
+        "trimX": 5,
+        "trimY": 10,
+        "width": 320,
+        "height": 446,
+        "rawWidth": 331,
+        "rawHeight": 462,
+        "borderTop": 0,
+        "borderBottom": 0,
+        "borderLeft": 0,
+        "borderRight": 0,
+        "packable": true,
+        "pixelsToUnit": 100,
+        "pivotX": 0.5,
+        "pivotY": 0.5,
+        "meshType": 0,
+        "vertices": {
+          "rawPosition": [
+            -160,
+            -223,
+            0,
+            160,
+            -223,
+            0,
+            -160,
+            223,
+            0,
+            160,
+            223,
+            0
+          ],
+          "indexes": [
+            0,
+            1,
+            2,
+            2,
+            1,
+            3
+          ],
+          "uv": [
+            5,
+            452,
+            325,
+            452,
+            5,
+            6,
+            325,
+            6
+          ],
+          "nuv": [
+            0.015105740181268883,
+            0.012987012987012988,
+            0.9818731117824774,
+            0.012987012987012988,
+            0.015105740181268883,
+            0.9783549783549783,
+            0.9818731117824774,
+            0.9783549783549783
+          ],
+          "minPos": [
+            -160,
+            -223,
+            0
+          ],
+          "maxPos": [
+            160,
+            223,
+            0
+          ]
+        },
+        "isUuid": true,
+        "imageUuidOrDatabaseUri": "f1206fb2-e649-499b-8be6-3687f7869d04@6c48a",
+        "atlasUuid": "",
+        "trimType": "auto"
+      },
+      "ver": "1.0.12",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "type": "sprite-frame",
+    "fixAlphaTransparencyArtifacts": false,
+    "hasAlpha": true,
+    "redirect": "f1206fb2-e649-499b-8be6-3687f7869d04@6c48a"
+  }
+}
