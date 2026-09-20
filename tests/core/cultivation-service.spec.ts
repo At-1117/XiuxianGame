@@ -74,4 +74,14 @@ describe("cultivation service", () => {
     const result = service.tickOffline(createSave("qi_refining", "early", 0), 24 * 3600);
     expect(result.save.cultivation).toBe(1_000);
   });
+
+  it("advances the offline timestamp by the real capped duration", () => {
+    const save = createSave("qi_refining", "early", 0);
+    const result = service.tickOffline(save, 24 * 3600);
+
+    // 时间戳必须推进 8 小时，而不是收益折算后的 4 小时；
+    // 否则下次启动会把已经结算过的离线时间再结算一次。
+    expect(result.save.updatedAtMs).toBe(save.updatedAtMs + 8 * 3600 * 1_000);
+    expect(result.save.lastCalculatedAtMs).toBe(result.save.updatedAtMs);
+  });
 });

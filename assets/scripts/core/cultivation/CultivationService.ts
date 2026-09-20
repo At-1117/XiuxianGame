@@ -81,11 +81,38 @@ export class CultivationService {
     );
   }
 
-  /** 结算在线或离线修炼时间，只增加灵力，不自动推进境界。 */
+  /** 结算在线修炼时间，只增加灵力，不自动推进境界。 */
   public tick(save: PlayerSaveV1, elapsedSeconds: number, timeScale = 1): CultivationTickResult {
-    const safeSeconds = Math.max(0, elapsedSeconds) * Math.max(0, timeScale);
+    return this.settleCultivation(save, elapsedSeconds, 1, timeScale);
+  }
+
+  /** 结算离线修炼：在线收益的 50%，最多 8 小时。 */
+  public tickOffline(save: PlayerSaveV1, elapsedSeconds: number, timeScale = 1): CultivationTickResult {
+    const cappedSeconds = Math.min(
+      Math.max(0, elapsedSeconds),
+      RESOURCE_RULES.offlineCapHours * 3600,
+    );
+    return this.settleCultivation(save, cappedSeconds, RESOURCE_RULES.offlineEfficiency, timeScale);
+  }
+
+  /**
+   * 执行一次灵力结算。
+   *
+   * @param save 结算前的存档，不会被直接修改。
+   * @param elapsedSeconds 真实经过的秒数；时间戳只按该值推进，避免离线收益被重复计算。
+   * @param cultivationEfficiency 灵力收益倍率；在线为 1，离线为 0.5。
+   * @param timeScale 开发期时间倍率；同时影响真实推进时间和灵力收益。
+   */
+  private settleCultivation(
+    save: PlayerSaveV1,
+    elapsedSeconds: number,
+    cultivationEfficiency: number,
+    timeScale: number,
+  ): CultivationTickResult {
+    const safeRealSeconds = Math.max(0, elapsedSeconds) * Math.max(0, timeScale);
+    const effectiveSeconds = safeRealSeconds * Math.max(0, cultivationEfficiency);
     const realm = getRealmDefinition(save.realm.realmId);
-    const rawGain = getCultivationPerSecond(save.realm.realmId, save.talents) * safeSeconds;
+    const rawGain = getCultivationPerSecond(save.realm.realmId, save.talents) * effectiveSeconds;
     const nextSave = cloneSave(save);
     let remainingGain = rawGain;
 
@@ -102,7 +129,7 @@ export class CultivationService {
     const availableCapacity = Math.max(0, realm.fullCultivation - nextSave.cultivation);
     const appliedGain = Math.min(availableCapacity, remainingGain);
     nextSave.cultivation += appliedGain;
-    nextSave.updatedAtMs += safeSeconds * 1000;
+    nextSave.updatedAtMs += safeRealSeconds * 1000;
     nextSave.lastCalculatedAtMs = nextSave.updatedAtMs;
 
     const requiredCultivation = this.getRequiredCultivation(nextSave);
@@ -114,15 +141,6 @@ export class CultivationService {
         nextSave.realm.stage === "perfection" &&
         nextSave.cultivation >= realm.fullCultivation,
     };
-  }
-
-  /** 结算离线修炼：在线收益的 50%，最多 8 小时。 */
-  public tickOffline(save: PlayerSaveV1, elapsedSeconds: number, timeScale = 1): CultivationTickResult {
-    const cappedSeconds = Math.min(
-      Math.max(0, elapsedSeconds),
-      RESOURCE_RULES.offlineCapHours * 3600,
-    );
-    return this.tick(save, cappedSeconds * RESOURCE_RULES.offlineEfficiency, timeScale);
   }
 
   /** 返回当前大境界突破成功率。 */
