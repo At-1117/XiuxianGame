@@ -1,0 +1,11 @@
+{
+  "name": "XiuxianGameProject",
+  "uuid": "051d0458-6edc-4665-9bf1-778f99cc2058",
+  "creator": {
+    "version": "3.8.8"
+  },
+  "private": true,
+  "scripts": {
+    "typecheck": "npx --yes --package typescript@5.8.3 tsc --noEmit -p tsconfig.json"
+  }
+}
