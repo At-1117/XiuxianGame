@@ -41,14 +41,14 @@
       "userData": {
         "trimThreshold": 1,
         "rotated": false,
-        "offsetX": 0,
+        "offsetX": -0.5,
         "offsetY": 0,
-        "trimX": 0,
-        "trimY": 0,
-        "width": 369.0,
-        "height": 152.0,
-        "rawWidth": 369.0,
-        "rawHeight": 152.0,
+        "trimX": 1,
+        "trimY": 4,
+        "width": 366,
+        "height": 144,
+        "rawWidth": 369,
+        "rawHeight": 152,
         "borderTop": 0,
         "borderBottom": 0,
         "borderLeft": 0,
@@ -60,17 +60,17 @@
         "meshType": 0,
         "vertices": {
           "rawPosition": [
-            -184.5,
-            -76.0,
+            -183,
+            -72,
             0,
-            184.5,
-            -76.0,
+            183,
+            -72,
             0,
-            -184.5,
-            76.0,
+            -183,
+            72,
             0,
-            184.5,
-            76.0,
+            183,
+            72,
             0
           ],
           "indexes": [
@@ -82,33 +82,33 @@
             3
           ],
           "uv": [
-            0,
-            152.0,
-            369.0,
-            152.0,
-            0,
-            0,
-            369.0,
-            0
+            1,
+            148,
+            367,
+            148,
+            1,
+            4,
+            367,
+            4
           ],
           "nuv": [
-            0,
-            0,
-            1,
-            0,
-            0,
-            1,
-            1,
-            1
+            0.0027100271002710027,
+            0.02631578947368421,
+            0.994579945799458,
+            0.02631578947368421,
+            0.0027100271002710027,
+            0.9736842105263158,
+            0.994579945799458,
+            0.9736842105263158
           ],
           "minPos": [
-            -184.5,
-            -76.0,
+            -183,
+            -72,
             0
           ],
           "maxPos": [
-            184.5,
-            76.0,
+            183,
+            72,
             0
           ]
         },
@@ -128,7 +128,7 @@
   "userData": {
     "type": "sprite-frame",
     "fixAlphaTransparencyArtifacts": false,
-    "hasAlpha": false,
+    "hasAlpha": true,
     "redirect": "8f79f5d3-950c-4803-b5bf-c0980538183f@6c48a"
   }
 }
