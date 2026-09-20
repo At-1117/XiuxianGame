@@ -2,6 +2,7 @@ import { REALMS } from "../../data/GameConfig";
 import type {
   BossId,
   BossProgress,
+  BreakthroughState,
   PlayerSettings,
   ProfessionId,
   RealmId,
@@ -27,6 +28,7 @@ export interface PlayerSaveV1 {
   cultivation: number;
   spiritStones: number;
   bossProgress: BossProgress;
+  breakthrough: BreakthroughState;
   reincarnation: ReincarnationState;
   settings: PlayerSettings;
 }
@@ -105,6 +107,15 @@ function isBossProgress(value: unknown): value is BossProgress {
   );
 }
 
+function isBreakthroughState(value: unknown): value is BreakthroughState {
+  return (
+    isRecord(value) &&
+    isFiniteNonNegativeNumber(value.recoveryRemaining) &&
+    Number.isInteger(value.consecutiveFailures) &&
+    Number(value.consecutiveFailures) >= 0
+  );
+}
+
 function isReincarnationState(value: unknown): value is ReincarnationState {
   return isRecord(value) && Number.isInteger(value.count) && Number(value.count) >= 0;
 }
@@ -129,6 +140,7 @@ export function isPlayerSaveV1(value: unknown): value is PlayerSaveV1 {
     isFiniteNonNegativeNumber(value.cultivation) &&
     isFiniteNonNegativeNumber(value.spiritStones) &&
     isBossProgress(value.bossProgress) &&
+    isBreakthroughState(value.breakthrough) &&
     isReincarnationState(value.reincarnation) &&
     isPlayerSettings(value.settings)
   );
@@ -141,3 +153,4 @@ export function parsePlayerSaveV1(value: unknown): PlayerSaveV1 {
   }
   return value;
 }
+

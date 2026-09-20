@@ -46,7 +46,16 @@ export interface PlayerSettings {
   autoAdventureEnabled: boolean;
 }
 
+/** 大境界突破失败后的恢复状态。 */
+export interface BreakthroughState {
+  /** 还需补足的灵力；为 0 时可以再次挑战大境界。 */
+  recoveryRemaining: number;
+  /** 当前大境界的连续失败次数，用于检验保底与显示。 */
+  consecutiveFailures: number;
+}
+
 /** 主动轮回状态。 */
 export interface ReincarnationState {
   count: number;
 }
+

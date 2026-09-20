@@ -37,6 +37,10 @@ export function createInitialPlayerSave(input: CreateInitialPlayerSaveInput): Pl
     },
     cultivation: 0,
     spiritStones: RESOURCE_RULES.initialSpiritStones,
+    breakthrough: {
+      recoveryRemaining: 0,
+      consecutiveFailures: 0,
+    },
     bossProgress: {
       currentBossId: "qi_refining_middle",
       defeatedBossIds: [],
@@ -51,3 +55,4 @@ export function createInitialPlayerSave(input: CreateInitialPlayerSaveInput): Pl
     },
   };
 }
+
