@@ -15,6 +15,7 @@ import { createGameRuntime } from "../../app/GameBootstrap";
 import { createInitialPlayerSave } from "../../core/model/PlayerProfile";
 import { SaveService } from "../../core/save/SaveService";
 import { TALENT_RULES } from "../../data/GameConfig";
+import { isInitialTalentAllocationComplete } from "../../core/model/TalentRules";
 import type { ProfessionId, TalentAllocation } from "../../core/types/GameTypes";
 
 const { ccclass, property } = _decorator;
@@ -242,8 +243,12 @@ export class OpeningController extends Component {
     }
   }
 
-  /** 天赋确认前打开不可逆确认弹窗。 */
+  /** 天赋确认前再次校验，完整分配后才打开不可逆确认弹窗。 */
   private handleTalentConfirm(): void {
+    if (!isInitialTalentAllocationComplete(this.talents)) {
+      this.refreshTalentView();
+      return;
+    }
     if (this.confirmModal) {
       this.confirmModal.active = true;
     }
@@ -258,7 +263,7 @@ export class OpeningController extends Component {
 
   /** 最终确认：创建存档并加载修炼场景。 */
   private handleModalConfirm(): void {
-    if (!this.runtime || !this.saveService) {
+    if (!this.runtime || !this.saveService || !isInitialTalentAllocationComplete(this.talents)) {
       return;
     }
 
@@ -364,15 +369,30 @@ export class OpeningController extends Component {
     return TALENT_RULES.initialPoints - used;
   }
 
-  /** 刷新四项天赋值和加减按钮状态。 */
+  /** 刷新四项天赋值、提示文案和加减/确认按钮状态。 */
   private refreshTalentView(): void {
-    this.setLabel(this.remainingPoints, this.getRemainingPoints().toString());
+    const remainingPoints = this.getRemainingPoints();
+    const allocationComplete = isInitialTalentAllocationComplete(this.talents);
+    const allTalentsPositive =
+      this.talents.spiritRoot > 0 &&
+      this.talents.physique > 0 &&
+      this.talents.luck > 0 &&
+      this.talents.mind > 0;
+    const hint = allocationComplete
+      ? "剩余 0 点"
+      : remainingPoints > 0
+        ? `剩余 ${remainingPoints} 点｜四项均需分配`
+        : allTalentsPositive
+          ? "剩余 0 点"
+          : "四项均需至少 1 点";
+    this.setLabel(this.remainingPoints, hint);
+    this.setButtonInteractable(this.talentConfirmButton, allocationComplete);
     this.setLabel(this.spiritRootValue, this.talents.spiritRoot.toString());
     this.setLabel(this.physiqueValue, this.talents.physique.toString());
     this.setLabel(this.luckValue, this.talents.luck.toString());
     this.setLabel(this.mindValue, this.talents.mind.toString());
 
-    const hasRemaining = this.getRemainingPoints() > 0;
+    const hasRemaining = remainingPoints > 0;
     this.setButtonInteractable(this.spiritRootMinus, this.talents.spiritRoot > 0);
     this.setButtonInteractable(this.spiritRootPlus, hasRemaining && this.talents.spiritRoot < TALENT_RULES.maximumPerTalent);
     this.setButtonInteractable(this.physiqueMinus, this.talents.physique > 0);
@@ -381,6 +401,7 @@ export class OpeningController extends Component {
     this.setButtonInteractable(this.luckPlus, hasRemaining && this.talents.luck < TALENT_RULES.maximumPerTalent);
     this.setButtonInteractable(this.mindMinus, this.talents.mind > 0);
     this.setButtonInteractable(this.mindPlus, hasRemaining && this.talents.mind < TALENT_RULES.maximumPerTalent);
+    this.setButtonInteractable(this.talentConfirmButton, allocationComplete);
   }
 
   private setCardInteractable(node: Node | null, interactable: boolean): void {

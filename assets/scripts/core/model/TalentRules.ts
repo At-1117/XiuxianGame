@@ -19,6 +19,17 @@ export function getTalentPointTotal(talents: TalentAllocation): number {
   return talents.spiritRoot + talents.physique + talents.luck + talents.mind;
 }
 
+/** 判断初始天赋是否完成分配：总点数恰好 20 且四项都至少 1 点。 */
+export function isInitialTalentAllocationComplete(talents: TalentAllocation): boolean {
+  return (
+    getTalentPointTotal(talents) === TALENT_RULES.initialPoints &&
+    talents.spiritRoot > 0 &&
+    talents.physique > 0 &&
+    talents.luck > 0 &&
+    talents.mind > 0
+  );
+}
+
 /** 校验初始天赋分配，保证点数为整数、总点数恰好 20 且每项不超过 25。 */
 export function validateInitialTalents(talents: TalentAllocation): void {
   const values = [talents.spiritRoot, talents.physique, talents.luck, talents.mind];
