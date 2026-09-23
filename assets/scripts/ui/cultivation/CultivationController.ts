@@ -6,6 +6,10 @@ import {
   Label,
   Node,
   Sprite,
+  Tween,
+  tween,
+  UIOpacity,
+  Vec3,
 } from "cc";
 import type { GameRuntime } from "../../app/GameBootstrap";
 import { createGameRuntime } from "../../app/GameBootstrap";
@@ -67,6 +71,9 @@ export class CultivationController extends Component {
   @property({ type: Node, tooltip: "神游按钮节点。" })
   public adventureButtonNode: Node | null = null;
 
+  @property({ type: Node, tooltip: "神游按钮下方的神游石数量 Label 节点。" })
+  public adventureStoneCountNode: Node | null = null;
+
   @property({ type: Node, tooltip: "突破按钮节点。" })
   public breakthroughButtonNode: Node | null = null;
 
@@ -100,6 +107,8 @@ export class CultivationController extends Component {
   private saveAccumulator = 0;
   private autoAdventureAccumulator = 0;
   private lastManualAdventureAtMs = Number.NEGATIVE_INFINITY;
+  private gainRateBasePosition = new Vec3();
+  private lastGainRateText = "";
   private adventureMessage = "";
   private adventureMessageRemainingSeconds = 0;
   private unsubscribeLifecycle: (() => void) | null = null;
@@ -109,6 +118,7 @@ export class CultivationController extends Component {
     this.saveService = new SaveService(this.runtime.platform.storage);
     this.save = this.loadOrCreateSave();
     this.save = this.adventureService.ensureAdventureState(this.save, this.runtime.clock.nowMs());
+    this.gainRateBasePosition = new Vec3(this.gainRateNode?.position ?? Vec3.ZERO);
     this.applyOfflineProgress();
     this.unsubscribeLifecycle = this.runtime.platform.subscribeLifecycle({
       onShow: () => this.applyOfflineProgress(),
@@ -238,10 +248,10 @@ export class CultivationController extends Component {
 
     this.setLabel(this.characterNameNode, `无名${profession.name}`);
     this.setLabel(this.spiritStoneNode, Math.floor(this.save.spiritStones).toString());
+    this.setLabel(this.adventureStoneCountNode, `神游石 ${this.save.adventureStones ?? 0}`);
     this.setLabel(this.reincarnationNode, `轮回次数：${this.save.reincarnation.count}`);
     this.setLabel(this.realmLabelNode, `${realm.name}境${REALM_STAGE_NAMES[this.save.realm.stage]}`);
-    this.setLabel(
-      this.gainRateNode,
+    this.updateGainRateLabel(
       this.adventureMessageRemainingSeconds > 0
         ? this.adventureMessage
         : this.save.breakthrough.recoveryRemaining > 0
@@ -263,6 +273,51 @@ export class CultivationController extends Component {
     this.setButtonInteractable(this.navTrialNode, true);
     this.refreshBreakthroughButton();
     this.refreshAutoButtonVisual();
+  }
+
+  /** 更新增益标签文本，并在文本变化时播放弹出淡出动画。 */
+  private updateGainRateLabel(text: string): void {
+    const label = this.gainRateNode?.getComponent(Label) ?? null;
+    if (!label) {
+      return;
+    }
+
+    label.color = new Color(78, 156, 255, 255);
+    label.string = text;
+    if (text === this.lastGainRateText) {
+      return;
+    }
+
+    this.lastGainRateText = text;
+    this.playGainRateAnimation();
+  }
+
+  /** 增益标签从下方弹出，停留后缓慢淡出。 */
+  private playGainRateAnimation(): void {
+    const node = this.gainRateNode;
+    const opacity = node?.getComponent(UIOpacity) ?? null;
+    if (!node || !opacity) {
+      return;
+    }
+
+    Tween.stopAllByTarget(node);
+    Tween.stopAllByTarget(opacity);
+    opacity.opacity = 255;
+    node.setPosition(
+      this.gainRateBasePosition.x,
+      this.gainRateBasePosition.y - 24,
+      this.gainRateBasePosition.z,
+    );
+    node.setScale(0.88, 0.88, 1);
+
+    tween(node)
+      .to(0.24, { position: this.gainRateBasePosition }, { easing: "backOut" })
+      .to(0.16, { scale: new Vec3(1, 1, 1) }, { easing: "backOut" })
+      .start();
+    tween(opacity)
+      .delay(1.5)
+      .to(0.8, { opacity: 0 }, { easing: "sineOut" })
+      .start();
   }
 
   /** 设置普通 Label 文本；节点或 Label 缺失时保持静默。 */
