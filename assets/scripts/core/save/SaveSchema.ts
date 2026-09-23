@@ -27,6 +27,10 @@ export interface PlayerSaveV1 {
   realm: RealmProgress;
   cultivation: number;
   spiritStones: number;
+  /** 神游石数量；旧版开发存档缺省时按初始值补齐。 */
+  adventureStones?: number;
+  /** 神游石上次恢复结算时间戳。 */
+  lastAdventureStoneRecoveryAtMs?: number;
   bossProgress: BossProgress;
   breakthrough: BreakthroughState;
   reincarnation: ReincarnationState;
@@ -46,6 +50,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function isFiniteNonNegativeNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value) && value >= 0;
+}
+
+function isOptionalNonNegativeInteger(value: unknown): boolean {
+  return value === undefined || (typeof value === "number" && Number.isInteger(value) && value >= 0);
 }
 
 function isProfessionId(value: unknown): value is ProfessionId {
@@ -139,6 +147,8 @@ export function isPlayerSaveV1(value: unknown): value is PlayerSaveV1 {
     isRealmProgress(value.realm) &&
     isFiniteNonNegativeNumber(value.cultivation) &&
     isFiniteNonNegativeNumber(value.spiritStones) &&
+    isOptionalNonNegativeInteger(value.adventureStones) &&
+    isOptionalNonNegativeInteger(value.lastAdventureStoneRecoveryAtMs) &&
     isBossProgress(value.bossProgress) &&
     isBreakthroughState(value.breakthrough) &&
     isReincarnationState(value.reincarnation) &&

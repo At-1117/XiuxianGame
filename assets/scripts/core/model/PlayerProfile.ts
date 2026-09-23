@@ -37,6 +37,8 @@ export function createInitialPlayerSave(input: CreateInitialPlayerSaveInput): Pl
     },
     cultivation: 0,
     spiritStones: RESOURCE_RULES.initialSpiritStones,
+    adventureStones: RESOURCE_RULES.initialAdventureStones,
+    lastAdventureStoneRecoveryAtMs: input.nowMs,
     breakthrough: {
       recoveryRemaining: 0,
       consecutiveFailures: 0,

@@ -66,9 +66,13 @@ export const TALENT_RULES = Object.freeze({
 /** 神游石和离线规则。 */
 export const RESOURCE_RULES = Object.freeze({
   initialSpiritStones: 0,
+  initialAdventureStones: 30,
   maximumSpiritStones: 500,
+  adventureStoneCost: 1,
   passiveRecoveryLimit: 30,
   recoveryIntervalSeconds: 30,
+  adventureManualCooldownSeconds: 0.5,
+  adventureAutoIntervalSeconds: 2,
   breakthroughReward: 50,
   offlineEfficiency: 0.5,
   offlineCapHours: 8,

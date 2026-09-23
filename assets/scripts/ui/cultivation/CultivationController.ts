@@ -9,8 +9,9 @@ import {
 } from "cc";
 import type { GameRuntime } from "../../app/GameBootstrap";
 import { createGameRuntime } from "../../app/GameBootstrap";
+import { AdventureService, type AdventureOutcome } from "../../core/adventure/AdventureService";
 import { CultivationService } from "../../core/cultivation/CultivationService";
-import { getRealmDefinition, getProfessionDefinition } from "../../data/GameConfig";
+import { getRealmDefinition, getProfessionDefinition, RESOURCE_RULES } from "../../data/GameConfig";
 import { getCultivationPerSecond } from "../../core/model/CultivationCalculator";
 import { createInitialPlayerSave } from "../../core/model/PlayerProfile";
 import type { PlayerSaveV1 } from "../../core/save/SaveSchema";
@@ -91,17 +92,23 @@ export class CultivationController extends Component {
   public timeScale = 1;
 
   private readonly cultivationService = new CultivationService();
+  private readonly adventureService = new AdventureService();
   private runtime: GameRuntime | null = null;
   private saveService: SaveService | null = null;
   private save: PlayerSaveV1 | null = null;
   private tickAccumulator = 0;
   private saveAccumulator = 0;
+  private autoAdventureAccumulator = 0;
+  private lastManualAdventureAtMs = Number.NEGATIVE_INFINITY;
+  private adventureMessage = "";
+  private adventureMessageRemainingSeconds = 0;
   private unsubscribeLifecycle: (() => void) | null = null;
 
   protected override onLoad(): void {
     this.runtime = createGameRuntime();
     this.saveService = new SaveService(this.runtime.platform.storage);
     this.save = this.loadOrCreateSave();
+    this.save = this.adventureService.ensureAdventureState(this.save, this.runtime.clock.nowMs());
     this.applyOfflineProgress();
     this.unsubscribeLifecycle = this.runtime.platform.subscribeLifecycle({
       onShow: () => this.applyOfflineProgress(),
@@ -154,6 +161,9 @@ export class CultivationController extends Component {
     this.tickAccumulator = 0;
     const tickResult = this.cultivationService.tick(this.save, elapsedSeconds, this.timeScale);
     this.save = tickResult.save;
+    this.save = this.adventureService.recoverSpiritStones(this.save, this.runtime?.clock.nowMs() ?? 0);
+    this.updateAdventureMessage(elapsedSeconds);
+    this.updateAutoAdventure(elapsedSeconds);
     this.saveAccumulator += elapsedSeconds;
     this.refreshView();
 
@@ -206,7 +216,10 @@ export class CultivationController extends Component {
       elapsedSeconds,
       this.timeScale,
     );
-    this.save = offlineResult.save;
+    this.save = this.adventureService.recoverSpiritStones(
+      offlineResult.save,
+      this.runtime.clock.nowMs(),
+    );
     this.saveService.save(this.save);
     this.refreshView();
   }
@@ -229,9 +242,11 @@ export class CultivationController extends Component {
     this.setLabel(this.realmLabelNode, `${realm.name}境${REALM_STAGE_NAMES[this.save.realm.stage]}`);
     this.setLabel(
       this.gainRateNode,
-      this.save.breakthrough.recoveryRemaining > 0
-        ? `补修还差 ${Math.ceil(this.save.breakthrough.recoveryRemaining)}`
-        : `灵力 +${cultivationPerSecond.toFixed(1)}/秒`,
+      this.adventureMessageRemainingSeconds > 0
+        ? this.adventureMessage
+        : this.save.breakthrough.recoveryRemaining > 0
+          ? `补修还差 ${Math.ceil(this.save.breakthrough.recoveryRemaining)}`
+          : `灵力 +${cultivationPerSecond.toFixed(1)}/秒`,
     );
     this.setLabel(
       this.progressTextNode,
@@ -334,12 +349,25 @@ export class CultivationController extends Component {
     }
 
     this.save.settings.autoAdventureEnabled = !this.save.settings.autoAdventureEnabled;
+    this.autoAdventureAccumulator = 0;
     this.persistSave();
+    this.refreshView();
   }
 
-  /** 神游业务将在下一阶段接入，当前只保留入口。 */
+  /** 手动神游入口；0.5 秒内重复点击会被忽略。 */
   private handleAdventureClick(): void {
-    console.info("[CultivationController] 神游入口已点击，玩法逻辑待接入。");
+    if (!this.runtime) {
+      return;
+    }
+
+    const nowMs = this.runtime.clock.nowMs();
+    const cooldownMs = RESOURCE_RULES.adventureManualCooldownSeconds * 1000;
+    if (nowMs - this.lastManualAdventureAtMs < cooldownMs) {
+      return;
+    }
+
+    this.lastManualAdventureAtMs = nowMs;
+    this.executeAdventure(false);
   }
 
   /** 执行一次突破，并使用运行时随机源判定结果。 */
@@ -366,6 +394,77 @@ export class CultivationController extends Component {
   /** 左上角头像和角色导航共用属性面板入口。 */
   private handleAttributeClick(): void {
     console.info("[CultivationController] 属性面板入口已点击，角色面板待接入。");
+  }
+
+  /** 自动神游计时；开启时每 2 秒尝试执行一次。 */
+  private updateAutoAdventure(elapsedSeconds: number): void {
+    if (!this.save?.settings.autoAdventureEnabled) {
+      this.autoAdventureAccumulator = 0;
+      return;
+    }
+
+    this.autoAdventureAccumulator += elapsedSeconds;
+    if (this.autoAdventureAccumulator < RESOURCE_RULES.adventureAutoIntervalSeconds) {
+      return;
+    }
+
+    this.autoAdventureAccumulator = 0;
+    this.executeAdventure(true);
+  }
+
+  /** 执行一次神游并刷新结果提示。 */
+  private executeAdventure(automatic: boolean): void {
+    if (!this.save || !this.runtime || !this.saveService) {
+      return;
+    }
+
+    const result = this.adventureService.runAdventure(
+      this.save,
+      this.runtime.random,
+      this.runtime.clock.nowMs(),
+    );
+    if (!result) {
+      this.setAdventureMessage("神游石不足");
+      this.refreshView();
+      return;
+    }
+
+    this.save = result.save;
+    this.setAdventureMessage(this.formatAdventureOutcome(result));
+    this.saveService.save(this.save);
+    this.refreshView();
+    console.info(
+      automatic ? "[CultivationController] 自动神游" : "[CultivationController] 手动神游",
+      this.adventureMessage,
+    );
+  }
+
+  /** 将神游结果格式化为一行短提示。 */
+  private formatAdventureOutcome(outcome: AdventureOutcome): string {
+    const rewards: string[] = [];
+    if (outcome.cultivationGained > 0) {
+      rewards.push(`修为 +${outcome.cultivationGained}`);
+    }
+    if (outcome.spiritStonesGained > 0) {
+      rewards.push(`灵石 +${outcome.spiritStonesGained}`);
+    }
+
+    const rewardText = rewards.length > 0 ? rewards.join("，") : "未获得奖励";
+    return `${outcome.title}：${rewardText}，神游石 ${outcome.adventureStonesRemaining}`;
+  }
+
+  /** 设置短时神游结果提示。 */
+  private setAdventureMessage(message: string): void {
+    this.adventureMessage = message;
+    this.adventureMessageRemainingSeconds = 2.5;
+  }
+
+  /** 递减神游提示持续时间。 */
+  private updateAdventureMessage(elapsedSeconds: number): void {
+    this.adventureMessageRemainingSeconds = Math.max(
+      0,
+      this.adventureMessageRemainingSeconds - elapsedSeconds,
+    );
   }
 
   /** 宗门导航入口。 */
