@@ -159,8 +159,6 @@ export class CultivationController extends Component {
   private saveAccumulator = 0;
   private autoAdventureAccumulator = 0;
   private lastManualAdventureAtMs = Number.NEGATIVE_INFINITY;
-  private gainRateBasePosition = new Vec3();
-  private lastGainRateText = "";
   private adventureMessage = "";
   private adventureMessageRemainingSeconds = 0;
   private unsubscribeLifecycle: (() => void) | null = null;
@@ -170,7 +168,6 @@ export class CultivationController extends Component {
     this.saveService = new SaveService(this.runtime.platform.storage);
     this.save = this.loadOrCreateSave();
     this.save = this.adventureService.ensureAdventureState(this.save, this.runtime.clock.nowMs());
-    this.gainRateBasePosition = new Vec3(this.gainRateNode?.position ?? Vec3.ZERO);
     this.applyOfflineProgress();
     this.unsubscribeLifecycle = this.runtime.platform.subscribeLifecycle({
       onShow: () => this.applyOfflineProgress(),
@@ -339,7 +336,7 @@ export class CultivationController extends Component {
     this.refreshSettingsPanel();
   }
 
-  /** 更新增益标签文本，并在文本变化时播放弹出淡出动画。 */
+  /** 更新蓝色增益标签文本；该标签常驻，不播放弹出或淡出动画。 */
   private updateGainRateLabel(text: string): void {
     const label = this.gainRateNode?.getComponent(Label) ?? null;
     if (!label) {
@@ -348,40 +345,6 @@ export class CultivationController extends Component {
 
     label.color = new Color(78, 156, 255, 255);
     label.string = text;
-    if (text === this.lastGainRateText) {
-      return;
-    }
-
-    this.lastGainRateText = text;
-    this.playGainRateAnimation();
-  }
-
-  /** 增益标签从下方弹出，停留后缓慢淡出。 */
-  private playGainRateAnimation(): void {
-    const node = this.gainRateNode;
-    const opacity = node?.getComponent(UIOpacity) ?? null;
-    if (!node || !opacity) {
-      return;
-    }
-
-    Tween.stopAllByTarget(node);
-    Tween.stopAllByTarget(opacity);
-    opacity.opacity = 255;
-    node.setPosition(
-      this.gainRateBasePosition.x,
-      this.gainRateBasePosition.y - 24,
-      this.gainRateBasePosition.z,
-    );
-    node.setScale(0.88, 0.88, 1);
-
-    tween(node)
-      .to(0.24, { position: this.gainRateBasePosition }, { easing: "backOut" })
-      .to(0.16, { scale: new Vec3(1, 1, 1) }, { easing: "backOut" })
-      .start();
-    tween(opacity)
-      .delay(1.5)
-      .to(0.8, { opacity: 0 }, { easing: "sineOut" })
-      .start();
   }
 
   /** 设置普通 Label 文本；节点或 Label 缺失时保持静默。 */
