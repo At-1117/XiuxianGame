@@ -1,6 +1,7 @@
 import {
   _decorator,
   Button,
+  Color,
   Component,
   Label,
   Node,
@@ -249,6 +250,7 @@ export class CultivationController extends Component {
       this.breakthroughButtonNode,
       this.cultivationService.canAttemptBreakthrough(this.save),
     );
+    this.refreshAutoButtonVisual();
   }
 
   /** 设置普通 Label 文本；节点或 Label 缺失时保持静默。 */
@@ -264,6 +266,24 @@ export class CultivationController extends Component {
     const sprite = this.progressFillNode?.getComponent(Sprite) ?? null;
     if (sprite) {
       sprite.fillRange = Math.min(1, Math.max(0, progress));
+    }
+  }
+
+  /** 根据自动修炼开关刷新按钮颜色，提供明确的开启和关闭反馈。 */
+  private refreshAutoButtonVisual(): void {
+    if (!this.save) {
+      return;
+    }
+
+    const enabled = this.save.settings.autoAdventureEnabled;
+    const color = enabled ? Color.WHITE : new Color(150, 150, 150, 255);
+    const sprite = this.autoButtonNode?.getComponent(Sprite) ?? null;
+    const button = this.autoButtonNode?.getComponent(Button) ?? null;
+    if (sprite) {
+      sprite.color = color;
+    }
+    if (button) {
+      button.normalColor = color;
     }
   }
 
