@@ -32,12 +32,12 @@ describe("cultivation service", () => {
     expect(service.canAttemptBreakthrough(result.save)).toBe(true);
   });
 
-  it("advances a small stage and starts cultivation from zero", () => {
-    const save = createSave("qi_refining", "early", 250);
+  it("carries excess cultivation into the next small stage", () => {
+    const save = createSave("qi_refining", "early", 260);
     const result = service.attemptBreakthrough(save, 1);
     expect(result.success).toBe(true);
     expect(result.save.realm.stage).toBe("middle");
-    expect(result.save.cultivation).toBe(0);
+    expect(result.save.cultivation).toBe(10);
   });
 
   it("always succeeds from qi refining perfection to foundation", () => {
@@ -46,6 +46,14 @@ describe("cultivation service", () => {
     expect(result.success).toBe(true);
     expect(result.save.realm).toEqual({ realmId: "foundation", stage: "early" });
     expect(result.save.cultivation).toBe(0);
+  });
+
+  it("carries excess cultivation into the next major realm", () => {
+    const save = createSave("qi_refining", "perfection", 1_050);
+    const result = service.attemptBreakthrough(save, 1);
+    expect(result.success).toBe(true);
+    expect(result.save.realm).toEqual({ realmId: "foundation", stage: "early" });
+    expect(result.save.cultivation).toBe(50);
   });
 
   it("uses eighty percent plus luck for foundation to golden core", () => {

@@ -157,6 +157,7 @@ export class CultivationService {
    * - 小境界：达到对应门槛后直接成功；
    * - 炼气圆满：100% 进入筑基；
    * - 筑基圆满：按 80% + 运气加成判定，成功后进入金丹；
+   * - 突破成功：扣除本次所需灵力，剩余灵力结转到下一阶段；
    * - 突破失败：不扣已有灵力，需要额外补足当前大境界 10% 的灵力。
    */
   public attemptBreakthrough(save: PlayerSaveV1, roll: number): BreakthroughResult {
@@ -167,8 +168,9 @@ export class CultivationService {
 
     const stageIndex = STAGE_ORDER.indexOf(save.realm.stage);
     if (stageIndex < STAGE_ORDER.length - 1) {
+      const consumedCultivation = this.getRequiredCultivation(save);
       nextSave.realm.stage = STAGE_ORDER[stageIndex + 1];
-      nextSave.cultivation = 0;
+      nextSave.cultivation = Math.max(0, save.cultivation - consumedCultivation);
       nextSave.breakthrough = { recoveryRemaining: 0, consecutiveFailures: 0 };
       return { save: nextSave, success: true, chance: 1 };
     }
@@ -180,8 +182,9 @@ export class CultivationService {
 
     const chance = this.getBreakthroughChance(save);
     if (roll <= chance) {
+      const consumedCultivation = this.getRequiredCultivation(save);
       nextSave.realm = { realmId: nextRealmId, stage: "early" };
-      nextSave.cultivation = 0;
+      nextSave.cultivation = Math.max(0, save.cultivation - consumedCultivation);
       nextSave.breakthrough = { recoveryRemaining: 0, consecutiveFailures: 0 };
       return { save: nextSave, success: true, chance };
     }
