@@ -567,9 +567,14 @@ export class CultivationController extends Component {
       return;
     }
 
+    const power = getPlayerPower(this.save.realm.realmId, this.save.talents);
     const attack = getBasicAttackPerSecond(this.save.realm.realmId, this.save.profession, this.save.talents);
+    this.setLabel(this.battlePowerValueNode, `${Math.round(power)}`);
     this.setLabel(this.attackValueNode, `${Math.round(attack)}`);
     this.setLabel(this.defenseValueNode, "0");
+    this.setLabel(this.foundationValueNode, `${this.save.talents.spiritRoot}`);
+    this.setLabel(this.physiqueValueNode, `${this.save.talents.physique}`);
+    this.setLabel(this.luckValueNode, `${this.save.talents.luck}`);
     this.setLabel(this.swordIntentValueNode, "0");
     this.setLabel(this.spearIntentValueNode, "0");
     this.setLabel(this.bladeIntentValueNode, "0");

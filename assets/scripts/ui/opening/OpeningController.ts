@@ -81,6 +81,9 @@ export class OpeningController extends Component {
   @property({ type: Node, tooltip: "剩余天赋点 Label 节点。" })
   public remainingPoints: Node | null = null;
 
+  @property({ type: Node, tooltip: "天赋点未分配完成时的提示 Label 节点。" })
+  public talentWarningNode: Node | null = null;
+
   @property({ type: Node, tooltip: "灵根当前值 Label 节点。" })
   public spiritRootValue: Node | null = null;
 
@@ -158,6 +161,7 @@ export class OpeningController extends Component {
   }
 
   protected override onDisable(): void {
+    this.unschedule(this.hideTalentWarning);
     this.stopSelectedBorderBlink();
     this.unbindButton(this.continueButton, this.handleContinue);
     this.unbindButton(this.resetButton, this.handleReset);
@@ -197,6 +201,9 @@ export class OpeningController extends Component {
     this.setButtonInteractable(this.continueButton, true);
     this.setButtonInteractable(this.talentConfirmButton, true);
     this.setButtonInteractable(this.modalConfirmButton, true);
+    if (this.talentWarningNode) {
+      this.talentWarningNode.active = false;
+    }
     this.updateProfessionSelectionVisuals();
     this.refreshTalentView();
   }
@@ -243,16 +250,37 @@ export class OpeningController extends Component {
     }
   }
 
-  /** 天赋确认前再次校验，完整分配后才打开不可逆确认弹窗。 */
+  /** 点击确认时校验；未完成分配则显示独立提示，不打开弹窗。 */
   private handleTalentConfirm(): void {
     if (!isInitialTalentAllocationComplete(this.talents)) {
-      this.refreshTalentView();
+      const remainingPoints = this.getRemainingPoints();
+      this.showTalentWarning(
+        remainingPoints > 0 ? "请先分配完所有属性点" : "四项属性均需至少 1 点",
+      );
       return;
     }
     if (this.confirmModal) {
       this.confirmModal.active = true;
     }
   }
+
+  /** 显示天赋分配提示，并在短时间后自动隐藏。 */
+  private showTalentWarning(message: string): void {
+    if (!this.talentWarningNode) {
+      return;
+    }
+    this.setLabel(this.talentWarningNode, message);
+    this.talentWarningNode.active = true;
+    this.unschedule(this.hideTalentWarning);
+    this.scheduleOnce(this.hideTalentWarning, 1.5);
+  }
+
+  /** 隐藏天赋分配提示。 */
+  private readonly hideTalentWarning = (): void => {
+    if (this.talentWarningNode) {
+      this.talentWarningNode.active = false;
+    }
+  };
 
   /** 取消不可逆确认。 */
   private handleModalCancel(): void {
@@ -372,21 +400,8 @@ export class OpeningController extends Component {
   /** 刷新四项天赋值、提示文案和加减/确认按钮状态。 */
   private refreshTalentView(): void {
     const remainingPoints = this.getRemainingPoints();
-    const allocationComplete = isInitialTalentAllocationComplete(this.talents);
-    const allTalentsPositive =
-      this.talents.spiritRoot > 0 &&
-      this.talents.physique > 0 &&
-      this.talents.luck > 0 &&
-      this.talents.mind > 0;
-    const hint = allocationComplete
-      ? "剩余 0 点"
-      : remainingPoints > 0
-        ? `剩余 ${remainingPoints} 点｜四项均需分配`
-        : allTalentsPositive
-          ? "剩余 0 点"
-          : "四项均需至少 1 点";
-    this.setLabel(this.remainingPoints, hint);
-    this.setButtonInteractable(this.talentConfirmButton, allocationComplete);
+    this.setLabel(this.remainingPoints, `剩余 ${remainingPoints} 点`);
+    this.setButtonInteractable(this.talentConfirmButton, true);
     this.setLabel(this.spiritRootValue, this.talents.spiritRoot.toString());
     this.setLabel(this.physiqueValue, this.talents.physique.toString());
     this.setLabel(this.luckValue, this.talents.luck.toString());
@@ -401,7 +416,7 @@ export class OpeningController extends Component {
     this.setButtonInteractable(this.luckPlus, hasRemaining && this.talents.luck < TALENT_RULES.maximumPerTalent);
     this.setButtonInteractable(this.mindMinus, this.talents.mind > 0);
     this.setButtonInteractable(this.mindPlus, hasRemaining && this.talents.mind < TALENT_RULES.maximumPerTalent);
-    this.setButtonInteractable(this.talentConfirmButton, allocationComplete);
+    this.setButtonInteractable(this.talentConfirmButton, true);
   }
 
   private setCardInteractable(node: Node | null, interactable: boolean): void {
