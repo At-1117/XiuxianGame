@@ -4,7 +4,6 @@ import { createGameRuntime } from "../../app/GameBootstrap";
 import { AdventureService, type AdventureOutcome } from "../../core/adventure/AdventureService";
 import { CultivationService } from "../../core/cultivation/CultivationService";
 import { getRealmDefinition, getProfessionDefinition, RESOURCE_RULES } from "../../data/GameConfig";
-import { getCultivationPerSecond } from "../../core/model/CultivationCalculator";
 import { getBasicAttackPerSecond, getPlayerPower } from "../../core/model/CombatCalculator";
 import { createInitialPlayerSave } from "../../core/model/PlayerProfile";
 import type { PlayerSaveV1 } from "../../core/save/SaveSchema";
@@ -159,6 +158,7 @@ export class CultivationController extends Component {
   private saveAccumulator = 0;
   private autoAdventureAccumulator = 0;
   private lastManualAdventureAtMs = Number.NEGATIVE_INFINITY;
+  private gainRateBasePosition = new Vec3();
   private adventureMessage = "";
   private adventureMessageRemainingSeconds = 0;
   private unsubscribeLifecycle: (() => void) | null = null;
@@ -168,6 +168,8 @@ export class CultivationController extends Component {
     this.saveService = new SaveService(this.runtime.platform.storage);
     this.save = this.loadOrCreateSave();
     this.save = this.adventureService.ensureAdventureState(this.save, this.runtime.clock.nowMs());
+    this.gainRateBasePosition = new Vec3(this.gainRateNode?.position ?? Vec3.ZERO);
+    this.hideGainRateLabel();
     this.applyOfflineProgress();
     this.unsubscribeLifecycle = this.runtime.platform.subscribeLifecycle({
       onShow: () => this.applyOfflineProgress(),
@@ -303,20 +305,12 @@ export class CultivationController extends Component {
     const profession = getProfessionDefinition(this.save.profession);
     const requiredCultivation = this.cultivationService.getRequiredCultivation(this.save);
     const progress = requiredCultivation > 0 ? this.save.cultivation / requiredCultivation : 0;
-    const cultivationPerSecond = getCultivationPerSecond(this.save.realm.realmId, this.save.talents);
 
     this.setLabel(this.characterNameNode, `无名${profession.name}`);
     this.setLabel(this.spiritStoneNode, Math.floor(this.save.spiritStones).toString());
     this.setLabel(this.adventureStoneCountNode, `${this.save.adventureStones ?? 0}`);
     this.setLabel(this.reincarnationNode, `轮回次数：${this.save.reincarnation.count}`);
     this.setLabel(this.realmLabelNode, `${realm.name}境${REALM_STAGE_NAMES[this.save.realm.stage]}`);
-    this.updateGainRateLabel(
-      this.adventureMessageRemainingSeconds > 0
-        ? this.adventureMessage
-        : this.save.breakthrough.recoveryRemaining > 0
-          ? `补修还差 ${Math.ceil(this.save.breakthrough.recoveryRemaining)}`
-          : `灵力 +${cultivationPerSecond.toFixed(1)}/秒`,
-    );
     this.setLabel(
       this.progressTextNode,
       `${Math.floor(this.save.cultivation)} / ${Math.floor(requiredCultivation)}`,
@@ -336,15 +330,52 @@ export class CultivationController extends Component {
     this.refreshSettingsPanel();
   }
 
-  /** 更新蓝色增益标签文本；该标签常驻，不播放弹出或淡出动画。 */
-  private updateGainRateLabel(text: string): void {
-    const label = this.gainRateNode?.getComponent(Label) ?? null;
-    if (!label) {
+  /** 显示一次蓝色增益提示，从下方弹出后缓慢淡出。 */
+  private showGainRateLabel(text: string): void {
+    const node = this.gainRateNode;
+    const label = node?.getComponent(Label) ?? null;
+    const opacity = node?.getComponent(UIOpacity) ?? null;
+    if (!node || !label || !opacity) {
       return;
     }
 
+    Tween.stopAllByTarget(node);
+    Tween.stopAllByTarget(opacity);
+    node.active = true;
     label.color = new Color(78, 156, 255, 255);
     label.string = text;
+    opacity.opacity = 255;
+    node.setPosition(
+      this.gainRateBasePosition.x,
+      this.gainRateBasePosition.y - 24,
+      this.gainRateBasePosition.z,
+    );
+    node.setScale(0.88, 0.88, 1);
+
+    tween(node)
+      .to(0.24, { position: this.gainRateBasePosition }, { easing: "backOut" })
+      .to(0.16, { scale: new Vec3(1, 1, 1) }, { easing: "backOut" })
+      .start();
+    tween(opacity)
+      .delay(1.5)
+      .to(0.75, { opacity: 0 }, { easing: "sineOut" })
+      .call(() => this.hideGainRateLabel())
+      .start();
+  }
+
+  /** 增益提示播放结束后隐藏，不恢复常驻收益文本。 */
+  private hideGainRateLabel(): void {
+    const node = this.gainRateNode;
+    const opacity = node?.getComponent(UIOpacity) ?? null;
+    if (node) {
+      Tween.stopAllByTarget(node);
+      node.active = false;
+      node.setScale(1, 1, 1);
+    }
+    if (opacity) {
+      Tween.stopAllByTarget(opacity);
+      opacity.opacity = 0;
+    }
   }
 
   /** 设置普通 Label 文本；节点或 Label 缺失时保持静默。 */
@@ -623,18 +654,24 @@ export class CultivationController extends Component {
     return `${outcome.title}：${rewardText}，神游石 ${outcome.adventureStonesRemaining}`;
   }
 
-  /** 设置短时神游结果提示。 */
+  /** 设置短时神游结果提示并播放弹出淡出动画。 */
   private setAdventureMessage(message: string): void {
     this.adventureMessage = message;
     this.adventureMessageRemainingSeconds = 2.5;
+    this.showGainRateLabel(message);
   }
 
   /** 递减神游提示持续时间。 */
   private updateAdventureMessage(elapsedSeconds: number): void {
+    const previousSeconds = this.adventureMessageRemainingSeconds;
     this.adventureMessageRemainingSeconds = Math.max(
       0,
       this.adventureMessageRemainingSeconds - elapsedSeconds,
     );
+    if (previousSeconds > 0 && this.adventureMessageRemainingSeconds === 0) {
+      this.adventureMessage = "";
+      this.hideGainRateLabel();
+    }
   }
 
   /** 宗门导航入口。 */

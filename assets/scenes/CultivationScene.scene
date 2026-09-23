@@ -1132,8 +1132,8 @@
     "_string": "0",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
-    "_actualFontSize": 24,
-    "_fontSize": 24,
+    "_actualFontSize": 25,
+    "_fontSize": 25,
     "_fontFamily": "Arial",
     "_lineHeight": 32,
     "_overflow": 1,
@@ -1800,7 +1800,7 @@
       "__id__": 36
     },
     "_children": [],
-    "_active": true,
+    "_active": false,
     "_components": [
       {
         "__id__": 44
@@ -1816,7 +1816,7 @@
     "_lpos": {
       "__type__": "cc.Vec3",
       "x": 0,
-      "y": -155.325,
+      "y": -50,
       "z": 0
     },
     "_lrot": {
@@ -1884,7 +1884,7 @@
       "b": 255,
       "a": 255
     },
-    "_string": "灵力 +1.0/秒",
+    "_string": "",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
     "_actualFontSize": 20,
@@ -1936,7 +1936,7 @@
     },
     "_enabled": true,
     "__prefab": null,
-    "_opacity": 255,
+    "_opacity": 0,
     "_id": "d5bxeIRgRNRZ/XWMG2GY4u"
   },
   {
