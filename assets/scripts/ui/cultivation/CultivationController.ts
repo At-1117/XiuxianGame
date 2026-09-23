@@ -5,7 +5,7 @@ import { AdventureService, type AdventureOutcome } from "../../core/adventure/Ad
 import { CultivationService } from "../../core/cultivation/CultivationService";
 import { getRealmDefinition, getProfessionDefinition, RESOURCE_RULES } from "../../data/GameConfig";
 import { getCultivationPerSecond } from "../../core/model/CultivationCalculator";
-import { getBasicAttackPerSecond } from "../../core/model/CombatCalculator";
+import { getBasicAttackPerSecond, getPlayerPower } from "../../core/model/CombatCalculator";
 import { createInitialPlayerSave } from "../../core/model/PlayerProfile";
 import type { PlayerSaveV1 } from "../../core/save/SaveSchema";
 import { SaveService } from "../../core/save/SaveService";
@@ -78,6 +78,9 @@ export class CultivationController extends Component {
   @property({ type: Node, tooltip: "属性面板关闭按钮。" })
   public attributeCloseButtonNode: Node | null = null;
 
+  @property({ type: Node, tooltip: "战力数值 Label。" })
+  public battlePowerValueNode: Node | null = null;
+
   @property({ type: Node, tooltip: "攻击力数值 Label。" })
   public attackValueNode: Node | null = null;
 
@@ -92,6 +95,15 @@ export class CultivationController extends Component {
 
   @property({ type: Node, tooltip: "刀意数值 Label。" })
   public bladeIntentValueNode: Node | null = null;
+
+  @property({ type: Node, tooltip: "根基数值 Label。" })
+  public foundationValueNode: Node | null = null;
+
+  @property({ type: Node, tooltip: "体质数值 Label。" })
+  public physiqueValueNode: Node | null = null;
+
+  @property({ type: Node, tooltip: "运气数值 Label。" })
+  public luckValueNode: Node | null = null;
 
   @property({ type: Node, tooltip: "精神力数值 Label。" })
   public mindValueNode: Node | null = null;
@@ -556,12 +568,12 @@ export class CultivationController extends Component {
     }
 
     const attack = getBasicAttackPerSecond(this.save.realm.realmId, this.save.profession, this.save.talents);
-    this.setLabel(this.attackValueNode, `攻击力：${Math.round(attack)}`);
-    this.setLabel(this.defenseValueNode, "防御力：0");
-    this.setLabel(this.swordIntentValueNode, "剑意：0");
-    this.setLabel(this.spearIntentValueNode, "枪意：0");
-    this.setLabel(this.bladeIntentValueNode, "刀意：0");
-    this.setLabel(this.mindValueNode, `精神力：${this.save.talents.mind}`);
+    this.setLabel(this.attackValueNode, `${Math.round(attack)}`);
+    this.setLabel(this.defenseValueNode, "0");
+    this.setLabel(this.swordIntentValueNode, "0");
+    this.setLabel(this.spearIntentValueNode, "0");
+    this.setLabel(this.bladeIntentValueNode, "0");
+    this.setLabel(this.mindValueNode, `${this.save.talents.mind}`);
   }
 
   /** 刷新设置面板的开关显示。 */

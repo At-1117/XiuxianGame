@@ -5,6 +5,10 @@ import {
   director,
   Label,
   Node,
+  Tween,
+  tween,
+  UIOpacity,
+  Vec3,
 } from "cc";
 import type { GameRuntime } from "../../app/GameBootstrap";
 import { createGameRuntime } from "../../app/GameBootstrap";
@@ -153,6 +157,7 @@ export class OpeningController extends Component {
   }
 
   protected override onDisable(): void {
+    this.stopSelectedBorderBlink();
     this.unbindButton(this.continueButton, this.handleContinue);
     this.unbindButton(this.resetButton, this.handleReset);
     this.unbindButton(this.backButton, this.handleBack);
@@ -188,15 +193,8 @@ export class OpeningController extends Component {
     this.setCardInteractable(this.swordCard, true);
     this.setCardInteractable(this.spearCard, false);
     this.setCardInteractable(this.bladeCard, false);
-    if (this.swordSelectedBorder) {
-      this.swordSelectedBorder.active = true;
-    }
-    if (this.spearSelectedBorder) {
-      this.spearSelectedBorder.active = false;
-    }
-    if (this.bladeSelectedBorder) {
-      this.bladeSelectedBorder.active = false;
-    }
+    this.setButtonInteractable(this.continueButton, true);
+    this.updateProfessionSelectionVisuals();
     this.refreshTalentView();
   }
 
@@ -274,14 +272,59 @@ export class OpeningController extends Component {
   /** 剑修选择；P1 其他职业不可选。 */
   private handleSwordSelect(): void {
     this.selectedProfession = "sword";
-    if (this.swordSelectedBorder) {
-      this.swordSelectedBorder.active = true;
+    this.updateProfessionSelectionVisuals();
+  }
+
+  /** 刷新职业卡选中边框，并只让当前选中边框持续闪烁。 */
+  private updateProfessionSelectionVisuals(): void {
+    this.stopSelectedBorderBlink();
+    const borders = [this.swordSelectedBorder, this.spearSelectedBorder, this.bladeSelectedBorder];
+    for (const border of borders) {
+      if (!border) {
+        continue;
+      }
+      border.active = border === this.swordSelectedBorder;
+      border.setScale(1, 1, 1);
+      const opacity = border.getComponent(UIOpacity);
+      if (opacity) {
+        opacity.opacity = 255;
+      }
     }
-    if (this.spearSelectedBorder) {
-      this.spearSelectedBorder.active = false;
+
+    const selectedBorder = this.swordSelectedBorder;
+    if (!selectedBorder) {
+      return;
     }
-    if (this.bladeSelectedBorder) {
-      this.bladeSelectedBorder.active = false;
+    const opacity = selectedBorder.getComponent(UIOpacity);
+    if (opacity) {
+      tween(opacity)
+        .repeatForever(
+          tween(opacity)
+            .to(0.45, { opacity: 90 }, { easing: "sineInOut" })
+            .to(0.45, { opacity: 255 }, { easing: "sineInOut" }),
+        )
+        .start();
+    }
+    tween(selectedBorder)
+      .repeatForever(
+        tween(selectedBorder)
+          .to(0.45, { scale: new Vec3(1.035, 1.035, 1) }, { easing: "sineInOut" })
+          .to(0.45, { scale: new Vec3(1, 1, 1) }, { easing: "sineInOut" }),
+      )
+      .start();
+  }
+
+  /** 停止所有职业卡选中边框动画。 */
+  private stopSelectedBorderBlink(): void {
+    for (const border of [this.swordSelectedBorder, this.spearSelectedBorder, this.bladeSelectedBorder]) {
+      if (!border) {
+        continue;
+      }
+      Tween.stopAllByTarget(border);
+      const opacity = border.getComponent(UIOpacity);
+      if (opacity) {
+        Tween.stopAllByTarget(opacity);
+      }
     }
   }
 
