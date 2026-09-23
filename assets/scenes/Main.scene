@@ -10216,7 +10216,7 @@
     "_enabled": true,
     "__prefab": null,
     "clickEvents": [],
-    "_interactable": false,
+    "_interactable": true,
     "_transition": 1,
     "_normalColor": {
       "__type__": "cc.Color",

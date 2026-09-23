@@ -194,6 +194,8 @@ export class OpeningController extends Component {
     this.setCardInteractable(this.spearCard, false);
     this.setCardInteractable(this.bladeCard, false);
     this.setButtonInteractable(this.continueButton, true);
+    this.setButtonInteractable(this.talentConfirmButton, true);
+    this.setButtonInteractable(this.modalConfirmButton, true);
     this.updateProfessionSelectionVisuals();
     this.refreshTalentView();
   }
