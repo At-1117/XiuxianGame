@@ -32,12 +32,12 @@ describe("cultivation service", () => {
     expect(service.canAttemptBreakthrough(result.save)).toBe(true);
   });
 
-  it("advances a small stage without clearing cultivation", () => {
+  it("advances a small stage and starts cultivation from zero", () => {
     const save = createSave("qi_refining", "early", 250);
     const result = service.attemptBreakthrough(save, 1);
     expect(result.success).toBe(true);
     expect(result.save.realm.stage).toBe("middle");
-    expect(result.save.cultivation).toBe(250);
+    expect(result.save.cultivation).toBe(0);
   });
 
   it("always succeeds from qi refining perfection to foundation", () => {

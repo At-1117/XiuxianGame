@@ -168,6 +168,8 @@ export class CultivationService {
     const stageIndex = STAGE_ORDER.indexOf(save.realm.stage);
     if (stageIndex < STAGE_ORDER.length - 1) {
       nextSave.realm.stage = STAGE_ORDER[stageIndex + 1];
+      nextSave.cultivation = 0;
+      nextSave.breakthrough = { recoveryRemaining: 0, consecutiveFailures: 0 };
       return { save: nextSave, success: true, chance: 1 };
     }
 

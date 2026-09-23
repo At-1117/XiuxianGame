@@ -246,10 +246,7 @@ export class CultivationController extends Component {
     this.setButtonInteractable(this.navSectNode, true);
     this.setButtonInteractable(this.navShopNode, true);
     this.setButtonInteractable(this.navTrialNode, true);
-    this.setButtonInteractable(
-      this.breakthroughButtonNode,
-      this.cultivationService.canAttemptBreakthrough(this.save),
-    );
+    this.refreshBreakthroughButton();
     this.refreshAutoButtonVisual();
   }
 
@@ -265,6 +262,9 @@ export class CultivationController extends Component {
   private setProgressFill(progress: number): void {
     const sprite = this.progressFillNode?.getComponent(Sprite) ?? null;
     if (sprite) {
+      sprite.type = Sprite.Type.FILLED;
+      sprite.fillType = Sprite.FillType.HORIZONTAL;
+      sprite.fillStart = 0;
       sprite.fillRange = Math.min(1, Math.max(0, progress));
     }
   }
@@ -285,6 +285,19 @@ export class CultivationController extends Component {
     if (button) {
       button.normalColor = color;
     }
+  }
+
+  /** 达到当前突破门槛时显示突破按钮，否则从场景中隐藏。 */
+  private refreshBreakthroughButton(): void {
+    if (!this.save) {
+      return;
+    }
+
+    const canBreakthrough = this.cultivationService.canAttemptBreakthrough(this.save);
+    if (this.breakthroughButtonNode) {
+      this.breakthroughButtonNode.active = canBreakthrough;
+    }
+    this.setButtonInteractable(this.breakthroughButtonNode, canBreakthrough);
   }
 
   /** 设置按钮是否可交互；节点或 Button 缺失时保持静默。 */
