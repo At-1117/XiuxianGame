@@ -52,7 +52,7 @@
     },
     "autoReleaseAssets": false,
     "_globals": {
-      "__id__": 294
+      "__id__": 295
     },
     "_id": "21e771f9-441e-47c7-816a-8927bb60e462"
   },
@@ -75,13 +75,13 @@
     "_active": true,
     "_components": [
       {
-        "__id__": 291
-      },
-      {
         "__id__": 292
       },
       {
         "__id__": 293
+      },
+      {
+        "__id__": 294
       }
     ],
     "_prefab": null,
@@ -240,6 +240,9 @@
     "_components": [
       {
         "__id__": 290
+      },
+      {
+        "__id__": 291
       }
     ],
     "_prefab": null,
@@ -11938,6 +11941,105 @@
     "_id": "2CmaM4Jxj6sLvYrV+UXQIw"
   },
   {
+    "__type__": "6323cN+khZPNYo/R8VEYVGp",
+    "_name": "",
+    "_objFlags": 0,
+    "__editorExtras__": {},
+    "node": {
+      "__id__": 5
+    },
+    "_enabled": true,
+    "__prefab": null,
+    "professionPage": {
+      "__id__": 13
+    },
+    "talentPage": {
+      "__id__": 130
+    },
+    "confirmModal": {
+      "__id__": 251
+    },
+    "completedPage": {
+      "__id__": 282
+    },
+    "swordCard": {
+      "__id__": 15
+    },
+    "spearCard": {
+      "__id__": 48
+    },
+    "bladeCard": {
+      "__id__": 84
+    },
+    "swordSelectedBorder": {
+      "__id__": 31
+    },
+    "spearSelectedBorder": {
+      "__id__": 64
+    },
+    "bladeSelectedBorder": {
+      "__id__": 100
+    },
+    "continueButton": {
+      "__id__": 121
+    },
+    "resetButton": {
+      "__id__": 228
+    },
+    "backButton": {
+      "__id__": 235
+    },
+    "talentConfirmButton": {
+      "__id__": 242
+    },
+    "modalCancelButton": {
+      "__id__": 266
+    },
+    "modalConfirmButton": {
+      "__id__": 273
+    },
+    "remainingPoints": {
+      "__id__": 137
+    },
+    "spiritRootValue": {
+      "__id__": 150
+    },
+    "physiqueValue": {
+      "__id__": 172
+    },
+    "luckValue": {
+      "__id__": 194
+    },
+    "mindValue": {
+      "__id__": 216
+    },
+    "spiritRootMinus": {
+      "__id__": 153
+    },
+    "spiritRootPlus": {
+      "__id__": 157
+    },
+    "physiqueMinus": {
+      "__id__": 175
+    },
+    "physiquePlus": {
+      "__id__": 179
+    },
+    "luckMinus": {
+      "__id__": 197
+    },
+    "luckPlus": {
+      "__id__": 201
+    },
+    "mindMinus": {
+      "__id__": 219
+    },
+    "mindPlus": {
+      "__id__": 223
+    },
+    "_id": "4amcjMN91PfJZv+VcmM1gm"
+  },
+  {
     "__type__": "cc.UITransform",
     "_name": "",
     "_objFlags": 0,
@@ -12008,28 +12110,28 @@
   {
     "__type__": "cc.SceneGlobals",
     "ambient": {
-      "__id__": 295
-    },
-    "shadows": {
       "__id__": 296
     },
-    "_skybox": {
+    "shadows": {
       "__id__": 297
     },
-    "fog": {
+    "_skybox": {
       "__id__": 298
     },
-    "octree": {
+    "fog": {
       "__id__": 299
     },
-    "skin": {
+    "octree": {
       "__id__": 300
     },
-    "lightProbeInfo": {
+    "skin": {
       "__id__": 301
     },
-    "postSettings": {
+    "lightProbeInfo": {
       "__id__": 302
+    },
+    "postSettings": {
+      "__id__": 303
     },
     "bakedWithStationaryMainLight": false,
     "bakedWithHighpLightmap": false
