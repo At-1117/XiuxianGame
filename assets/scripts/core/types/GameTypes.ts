@@ -41,9 +41,14 @@ export interface BossProgress {
   activeReincarnationUnlocked: boolean;
 }
 
-/** 玩家设置。首版仅保留自动神游开关。 */
+/** 玩家设置。 */
 export interface PlayerSettings {
+  /** 自动神游开关。 */
   autoAdventureEnabled: boolean;
+  /** 音乐开关；旧开发存档缺省时按开启处理。 */
+  musicEnabled?: boolean;
+  /** 音效开关；旧开发存档缺省时按开启处理。 */
+  soundEnabled?: boolean;
 }
 
 /** 大境界突破失败后的恢复状态。 */

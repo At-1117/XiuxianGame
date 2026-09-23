@@ -54,6 +54,8 @@ export function createInitialPlayerSave(input: CreateInitialPlayerSaveInput): Pl
     },
     settings: {
       autoAdventureEnabled: false,
+      musicEnabled: true,
+      soundEnabled: true,
     },
   };
 }

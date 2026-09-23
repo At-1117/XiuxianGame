@@ -1,22 +1,11 @@
-import {
-  _decorator,
-  Button,
-  Color,
-  Component,
-  Label,
-  Node,
-  Sprite,
-  Tween,
-  tween,
-  UIOpacity,
-  Vec3,
-} from "cc";
+import {_decorator, Button, Color, Component, Label, Node, Sprite, Tween, tween, UIOpacity, Vec3} from "cc";
 import type { GameRuntime } from "../../app/GameBootstrap";
 import { createGameRuntime } from "../../app/GameBootstrap";
 import { AdventureService, type AdventureOutcome } from "../../core/adventure/AdventureService";
 import { CultivationService } from "../../core/cultivation/CultivationService";
 import { getRealmDefinition, getProfessionDefinition, RESOURCE_RULES } from "../../data/GameConfig";
 import { getCultivationPerSecond } from "../../core/model/CultivationCalculator";
+import { getBasicAttackPerSecond } from "../../core/model/CombatCalculator";
 import { createInitialPlayerSave } from "../../core/model/PlayerProfile";
 import type { PlayerSaveV1 } from "../../core/save/SaveSchema";
 import { SaveService } from "../../core/save/SaveService";
@@ -83,6 +72,57 @@ export class CultivationController extends Component {
   @property({ type: Node, tooltip: "左上角属性入口按钮节点。" })
   public attributeEntryNode: Node | null = null;
 
+  @property({ type: Node, tooltip: "属性面板根节点。" })
+  public attributePanelNode: Node | null = null;
+
+  @property({ type: Node, tooltip: "属性面板关闭按钮。" })
+  public attributeCloseButtonNode: Node | null = null;
+
+  @property({ type: Node, tooltip: "攻击力数值 Label。" })
+  public attackValueNode: Node | null = null;
+
+  @property({ type: Node, tooltip: "防御力数值 Label。" })
+  public defenseValueNode: Node | null = null;
+
+  @property({ type: Node, tooltip: "剑意数值 Label。" })
+  public swordIntentValueNode: Node | null = null;
+
+  @property({ type: Node, tooltip: "枪意数值 Label。" })
+  public spearIntentValueNode: Node | null = null;
+
+  @property({ type: Node, tooltip: "刀意数值 Label。" })
+  public bladeIntentValueNode: Node | null = null;
+
+  @property({ type: Node, tooltip: "精神力数值 Label。" })
+  public mindValueNode: Node | null = null;
+
+  @property({ type: Node, tooltip: "设置面板根节点。" })
+  public settingsPanelNode: Node | null = null;
+
+  @property({ type: Node, tooltip: "设置面板关闭按钮。" })
+  public settingsCloseButtonNode: Node | null = null;
+
+  @property({ type: Node, tooltip: "音乐开关按钮。" })
+  public musicToggleButtonNode: Node | null = null;
+
+  @property({ type: Node, tooltip: "音乐开启状态节点。" })
+  public musicOnNode: Node | null = null;
+
+  @property({ type: Node, tooltip: "音乐关闭状态节点。" })
+  public musicOffNode: Node | null = null;
+
+  @property({ type: Node, tooltip: "音效开关按钮。" })
+  public soundToggleButtonNode: Node | null = null;
+
+  @property({ type: Node, tooltip: "音效开启状态节点。" })
+  public soundOnNode: Node | null = null;
+
+  @property({ type: Node, tooltip: "音效关闭状态节点。" })
+  public soundOffNode: Node | null = null;
+
+  @property({ type: Node, tooltip: "删档重玩按钮。" })
+  public deleteSaveButtonNode: Node | null = null;
+
   @property({ type: Node, tooltip: "角色导航按钮节点。" })
   public navCharacterNode: Node | null = null;
 
@@ -133,6 +173,11 @@ export class CultivationController extends Component {
     this.bindButton(this.breakthroughButtonNode, this.handleBreakthroughClick);
     this.bindButton(this.settingsButtonNode, this.handleSettingsClick);
     this.bindButton(this.attributeEntryNode, this.handleAttributeClick);
+    this.bindButton(this.attributeCloseButtonNode, this.handleAttributeClose);
+    this.bindButton(this.settingsCloseButtonNode, this.handleSettingsClose);
+    this.bindButton(this.musicToggleButtonNode, this.handleMusicToggle);
+    this.bindButton(this.soundToggleButtonNode, this.handleSoundToggle);
+    this.bindButton(this.deleteSaveButtonNode, this.handleDeleteSave);
     this.bindButton(this.navCharacterNode, this.handleAttributeClick);
     this.bindButton(this.navSectNode, this.handleSectClick);
     this.bindButton(this.navShopNode, this.handleShopClick);
@@ -145,6 +190,11 @@ export class CultivationController extends Component {
     this.unbindButton(this.breakthroughButtonNode, this.handleBreakthroughClick);
     this.unbindButton(this.settingsButtonNode, this.handleSettingsClick);
     this.unbindButton(this.attributeEntryNode, this.handleAttributeClick);
+    this.unbindButton(this.attributeCloseButtonNode, this.handleAttributeClose);
+    this.unbindButton(this.settingsCloseButtonNode, this.handleSettingsClose);
+    this.unbindButton(this.musicToggleButtonNode, this.handleMusicToggle);
+    this.unbindButton(this.soundToggleButtonNode, this.handleSoundToggle);
+    this.unbindButton(this.deleteSaveButtonNode, this.handleDeleteSave);
     this.unbindButton(this.navCharacterNode, this.handleAttributeClick);
     this.unbindButton(this.navSectNode, this.handleSectClick);
     this.unbindButton(this.navShopNode, this.handleShopClick);
@@ -248,7 +298,7 @@ export class CultivationController extends Component {
 
     this.setLabel(this.characterNameNode, `无名${profession.name}`);
     this.setLabel(this.spiritStoneNode, Math.floor(this.save.spiritStones).toString());
-    this.setLabel(this.adventureStoneCountNode, `神游石 ${this.save.adventureStones ?? 0}`);
+    this.setLabel(this.adventureStoneCountNode, `${this.save.adventureStones ?? 0}`);
     this.setLabel(this.reincarnationNode, `轮回次数：${this.save.reincarnation.count}`);
     this.setLabel(this.realmLabelNode, `${realm.name}境${REALM_STAGE_NAMES[this.save.realm.stage]}`);
     this.updateGainRateLabel(
@@ -273,6 +323,8 @@ export class CultivationController extends Component {
     this.setButtonInteractable(this.navTrialNode, true);
     this.refreshBreakthroughButton();
     this.refreshAutoButtonVisual();
+    this.refreshAttributePanel();
+    this.refreshSettingsPanel();
   }
 
   /** 更新增益标签文本，并在文本变化时播放弹出淡出动画。 */
@@ -441,14 +493,97 @@ export class CultivationController extends Component {
     this.refreshView();
   }
 
-  /** 设置入口暂时只记录事件，设置面板接入后替换为场景切换。 */
+  /** 打开设置面板并刷新开关状态。 */
   private handleSettingsClick(): void {
-    console.info("[CultivationController] 设置入口已点击，设置面板待接入。");
+    if (this.settingsPanelNode) {
+      this.settingsPanelNode.active = true;
+    }
+    this.refreshSettingsPanel();
   }
 
-  /** 左上角头像和角色导航共用属性面板入口。 */
+  /** 关闭属性面板。 */
+  private handleAttributeClose(): void {
+    if (this.attributePanelNode) {
+      this.attributePanelNode.active = false;
+    }
+  }
+
+  /** 关闭设置面板。 */
+  private handleSettingsClose(): void {
+    if (this.settingsPanelNode) {
+      this.settingsPanelNode.active = false;
+    }
+  }
+
+  /** 左上角头像打开属性面板。 */
   private handleAttributeClick(): void {
-    console.info("[CultivationController] 属性面板入口已点击，角色面板待接入。");
+    if (this.attributePanelNode) {
+      this.attributePanelNode.active = true;
+    }
+    this.refreshAttributePanel();
+  }
+
+  /** 切换音乐开关。 */
+  private handleMusicToggle(): void {
+    if (!this.save) {
+      return;
+    }
+    this.save.settings.musicEnabled = !(this.save.settings.musicEnabled ?? true);
+    this.persistSave();
+    this.refreshSettingsPanel();
+  }
+
+  /** 切换音效开关。 */
+  private handleSoundToggle(): void {
+    if (!this.save) {
+      return;
+    }
+    this.save.settings.soundEnabled = !(this.save.settings.soundEnabled ?? true);
+    this.persistSave();
+    this.refreshSettingsPanel();
+  }
+
+  /** 删档重玩需要二次确认，当前阶段只提示，不直接删除。 */
+  private handleDeleteSave(): void {
+    this.setAdventureMessage("删档重玩需二次确认");
+    this.refreshView();
+  }
+
+  /** 刷新属性面板数值。 */
+  private refreshAttributePanel(): void {
+    if (!this.save) {
+      return;
+    }
+
+    const attack = getBasicAttackPerSecond(this.save.realm.realmId, this.save.profession, this.save.talents);
+    this.setLabel(this.attackValueNode, `攻击力：${Math.round(attack)}`);
+    this.setLabel(this.defenseValueNode, "防御力：0");
+    this.setLabel(this.swordIntentValueNode, "剑意：0");
+    this.setLabel(this.spearIntentValueNode, "枪意：0");
+    this.setLabel(this.bladeIntentValueNode, "刀意：0");
+    this.setLabel(this.mindValueNode, `精神力：${this.save.talents.mind}`);
+  }
+
+  /** 刷新设置面板的开关显示。 */
+  private refreshSettingsPanel(): void {
+    if (!this.save) {
+      return;
+    }
+
+    const musicEnabled = this.save.settings.musicEnabled ?? true;
+    const soundEnabled = this.save.settings.soundEnabled ?? true;
+    if (this.musicOnNode) {
+      this.musicOnNode.active = musicEnabled;
+    }
+    if (this.musicOffNode) {
+      this.musicOffNode.active = !musicEnabled;
+    }
+    if (this.soundOnNode) {
+      this.soundOnNode.active = soundEnabled;
+    }
+    if (this.soundOffNode) {
+      this.soundOffNode.active = !soundEnabled;
+    }
   }
 
   /** 自动神游计时；开启时每 2 秒尝试执行一次。 */
