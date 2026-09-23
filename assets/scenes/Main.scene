@@ -66,6 +66,9 @@
     },
     "_children": [
       {
+        "__id__": 3
+      },
+      {
         "__id__": 5
       }
     ],
@@ -147,18 +150,18 @@
       "z": 1
     },
     "_mobility": 0,
-    "_layer": 1073741824,
+    "_layer": 33554432,
     "_euler": {
       "__type__": "cc.Vec3",
       "x": 0,
       "y": 0,
       "z": 0
     },
-    "_id": "ebFwiq8gBFaYpqYbdoDODe"
+    "_id": "33nr7bZ4NJsomtmjsvMMfQ"
   },
   {
     "__type__": "cc.Camera",
-    "_name": "",
+    "_name": "Camera<CameraComponent>",
     "_objFlags": 0,
     "__editorExtras__": {},
     "node": {
@@ -200,7 +203,7 @@
     "_usePostProcess": false,
     "_cameraType": -1,
     "_trackingType": 0,
-    "_id": "63WIch3o5BEYRlXzTT0oWc"
+    "_id": "7cUVXWOF1J+qI6shAmuq+F"
   },
   {
     "__type__": "cc.Node",

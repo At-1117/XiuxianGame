@@ -15,5 +15,8 @@
   "include": [
     "../assets/scripts/**/*.ts",
     "./**/*.ts"
+  ],
+  "exclude": [
+    "../assets/scripts/ui/**/*.ts"
   ]
 }
