@@ -421,8 +421,8 @@
     "_prefab": null,
     "_lpos": {
       "__type__": "cc.Vec3",
-      "x": -281.74,
-      "y": 573.199,
+      "x": -280,
+      "y": 575,
       "z": 0
     },
     "_lrot": {
@@ -1100,7 +1100,7 @@
     "_contentSize": {
       "__type__": "cc.Size",
       "width": 120,
-      "height": 42
+      "height": 40
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -1135,7 +1135,7 @@
     "_actualFontSize": 25,
     "_fontSize": 25,
     "_fontFamily": "Arial",
-    "_lineHeight": 32,
+    "_lineHeight": 40,
     "_overflow": 1,
     "_enableWrapText": true,
     "_font": null,
@@ -1232,7 +1232,7 @@
     "_contentSize": {
       "__type__": "cc.Size",
       "width": 150,
-      "height": 36
+      "height": 35
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -1264,10 +1264,10 @@
     "_string": "初次修行",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
-    "_actualFontSize": 16,
-    "_fontSize": 16,
+    "_actualFontSize": 20,
+    "_fontSize": 20,
     "_fontFamily": "Arial",
-    "_lineHeight": 22,
+    "_lineHeight": 40,
     "_overflow": 1,
     "_enableWrapText": true,
     "_font": null,
@@ -1855,7 +1855,7 @@
     "_contentSize": {
       "__type__": "cc.Size",
       "width": 300,
-      "height": 34
+      "height": 50
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -1890,7 +1890,7 @@
     "_actualFontSize": 20,
     "_fontSize": 20,
     "_fontFamily": "Arial",
-    "_lineHeight": 23,
+    "_lineHeight": 20,
     "_overflow": 1,
     "_enableWrapText": true,
     "_font": null,
@@ -3123,7 +3123,7 @@
     "_contentSize": {
       "__type__": "cc.Size",
       "width": 120,
-      "height": 28
+      "height": 30
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -3207,7 +3207,7 @@
     "_contentSize": {
       "__type__": "cc.Size",
       "width": 150,
-      "height": 145.5
+      "height": 150
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -3336,7 +3336,7 @@
     "_lpos": {
       "__type__": "cc.Vec3",
       "x": -145,
-      "y": -1,
+      "y": 0,
       "z": 0
     },
     "_lrot": {
@@ -3384,7 +3384,7 @@
     "_lpos": {
       "__type__": "cc.Vec3",
       "x": 0,
-      "y": -46.457,
+      "y": -50,
       "z": 0
     },
     "_lrot": {
@@ -3423,7 +3423,7 @@
     "_contentSize": {
       "__type__": "cc.Size",
       "width": 120,
-      "height": 28
+      "height": 30
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -3636,7 +3636,7 @@
     "_lpos": {
       "__type__": "cc.Vec3",
       "x": 0,
-      "y": 3.543,
+      "y": 5,
       "z": 0
     },
     "_lrot": {
@@ -3684,7 +3684,7 @@
     "_lpos": {
       "__type__": "cc.Vec3",
       "x": 0,
-      "y": -50,
+      "y": -55,
       "z": 0
     },
     "_lrot": {
@@ -3723,7 +3723,7 @@
     "_contentSize": {
       "__type__": "cc.Size",
       "width": 120,
-      "height": 28
+      "height": 30
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -3936,7 +3936,7 @@
     "_lpos": {
       "__type__": "cc.Vec3",
       "x": 145,
-      "y": 7.796,
+      "y": 10,
       "z": 0
     },
     "_lrot": {
@@ -3984,7 +3984,7 @@
     "_lpos": {
       "__type__": "cc.Vec3",
       "x": 0,
-      "y": -52.835,
+      "y": -60,
       "z": 0
     },
     "_lrot": {
@@ -4023,7 +4023,7 @@
     "_contentSize": {
       "__type__": "cc.Size",
       "width": 120,
-      "height": 28
+      "height": 30
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -4236,7 +4236,7 @@
     "_lpos": {
       "__type__": "cc.Vec3",
       "x": 300,
-      "y": 9.922,
+      "y": 10,
       "z": 0
     },
     "_lrot": {
@@ -4284,7 +4284,7 @@
     "_lpos": {
       "__type__": "cc.Vec3",
       "x": 0,
-      "y": -52.835,
+      "y": -60,
       "z": 0
     },
     "_lrot": {
@@ -4323,7 +4323,7 @@
     "_contentSize": {
       "__type__": "cc.Size",
       "width": 120,
-      "height": 28
+      "height": 30
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",

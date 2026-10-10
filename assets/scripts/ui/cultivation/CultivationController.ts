@@ -1,8 +1,9 @@
-import {_decorator, Button, Color, Component, Label, Node, Sprite, Tween, tween, UIOpacity, Vec3} from "cc";
+import {_decorator, Button, Color, Component, director, Label, Node, Sprite, Tween, tween, UIOpacity, Vec3} from "cc";
 import type { GameRuntime } from "../../app/GameBootstrap";
 import { createGameRuntime } from "../../app/GameBootstrap";
 import { AdventureService, type AdventureOutcome } from "../../core/adventure/AdventureService";
 import { CultivationService } from "../../core/cultivation/CultivationService";
+import { CultivationSessionTracker } from "../../core/cultivation/CultivationSessionTracker";
 import { getRealmDefinition, getProfessionDefinition, RESOURCE_RULES } from "../../data/GameConfig";
 import { getBasicAttackPerSecond, getPlayerPower } from "../../core/model/CombatCalculator";
 import { createInitialPlayerSave } from "../../core/model/PlayerProfile";
@@ -153,6 +154,7 @@ export class CultivationController extends Component {
   private readonly adventureService = new AdventureService();
   private runtime: GameRuntime | null = null;
   private saveService: SaveService | null = null;
+  private cultivationSessionTracker: CultivationSessionTracker | null = null;
   private save: PlayerSaveV1 | null = null;
   private tickAccumulator = 0;
   private saveAccumulator = 0;
@@ -166,6 +168,7 @@ export class CultivationController extends Component {
   protected override onLoad(): void {
     this.runtime = createGameRuntime();
     this.saveService = new SaveService(this.runtime.platform.storage);
+    this.cultivationSessionTracker = new CultivationSessionTracker(this.runtime.platform.storage);
     this.save = this.loadOrCreateSave();
     this.save = this.adventureService.ensureAdventureState(this.save, this.runtime.clock.nowMs());
     this.gainRateBasePosition = new Vec3(this.gainRateNode?.position ?? Vec3.ZERO);
@@ -189,7 +192,7 @@ export class CultivationController extends Component {
     this.bindButton(this.musicToggleButtonNode, this.handleMusicToggle);
     this.bindButton(this.soundToggleButtonNode, this.handleSoundToggle);
     this.bindButton(this.deleteSaveButtonNode, this.handleDeleteSave);
-    this.bindButton(this.navCharacterNode, this.handleAttributeClick);
+    this.bindButton(this.navCharacterNode, this.handleCharacterNavigation);
     this.bindButton(this.navSectNode, this.handleSectClick);
     this.bindButton(this.navShopNode, this.handleShopClick);
     this.bindButton(this.navTrialNode, this.handleTrialClick);
@@ -206,7 +209,7 @@ export class CultivationController extends Component {
     this.unbindButton(this.musicToggleButtonNode, this.handleMusicToggle);
     this.unbindButton(this.soundToggleButtonNode, this.handleSoundToggle);
     this.unbindButton(this.deleteSaveButtonNode, this.handleDeleteSave);
-    this.unbindButton(this.navCharacterNode, this.handleAttributeClick);
+    this.unbindButton(this.navCharacterNode, this.handleCharacterNavigation);
     this.unbindButton(this.navSectNode, this.handleSectClick);
     this.unbindButton(this.navShopNode, this.handleShopClick);
     this.unbindButton(this.navTrialNode, this.handleTrialClick);
@@ -271,26 +274,34 @@ export class CultivationController extends Component {
     });
   }
 
-  /** 根据存档时间戳结算离线收益。 */
+  /**
+   * 结算离开修炼场景期间的修炼进度。
+   *
+   * 如果玩家只是切换到角色等前台面板，按在线收益补算；
+   * 如果应用真正进入后台或重启，没有前台标记时按离线收益结算。
+   */
   private applyOfflineProgress(): void {
     if (!this.save || !this.runtime || !this.saveService) {
       return;
     }
 
-    const elapsedSeconds = (this.runtime.clock.nowMs() - this.save.lastCalculatedAtMs) / 1000;
+    const nowMs = this.runtime.clock.nowMs();
+    const foregroundAwayStartedAtMs =
+      this.cultivationSessionTracker?.readForegroundAwayStartedAtMs() ?? null;
+    const elapsedSeconds = (nowMs - this.save.lastCalculatedAtMs) / 1000;
+
     if (elapsedSeconds <= 0) {
+      this.cultivationSessionTracker?.clearForegroundAway();
       return;
     }
 
-    const offlineResult = this.cultivationService.tickOffline(
-      this.save,
-      elapsedSeconds,
-      this.timeScale,
-    );
-    this.save = this.adventureService.recoverSpiritStones(
-      offlineResult.save,
-      this.runtime.clock.nowMs(),
-    );
+    const result =
+      foregroundAwayStartedAtMs === null
+        ? this.cultivationService.tickOffline(this.save, elapsedSeconds, this.timeScale)
+        : this.cultivationService.tick(this.save, elapsedSeconds, this.timeScale);
+
+    this.save = this.adventureService.recoverSpiritStones(result.save, nowMs);
+    this.cultivationSessionTracker?.clearForegroundAway();
     this.saveService.save(this.save);
     this.refreshView();
   }
@@ -674,18 +685,50 @@ export class CultivationController extends Component {
     }
   }
 
+  /**
+   * 在切换场景前先把当前修炼进度结算到当前时间并保存。
+   *
+   * 这样玩家点击其他底部入口时，不会丢失两次自动保存之间的灵力；
+   * 标记前台离开后，返回修炼场景时再按在线收益补算停留时间。
+   */
+  private settleBeforeSceneNavigation(): void {
+    if (!this.save || !this.runtime || !this.saveService) {
+      return;
+    }
+
+    const nowMs = this.runtime.clock.nowMs();
+    const elapsedSeconds = (nowMs - this.save.lastCalculatedAtMs) / 1000;
+    if (elapsedSeconds > 0) {
+      this.save = this.cultivationService.tick(this.save, elapsedSeconds, this.timeScale).save;
+    }
+    this.save = this.adventureService.recoverSpiritStones(this.save, nowMs);
+    this.saveService.save(this.save);
+    this.cultivationSessionTracker?.markForegroundAway(nowMs);
+  }
+
+  /** 统一场景导航入口：切换前先结算并保存修炼进度。 */
+  private navigateToScene(sceneName: string): void {
+    this.settleBeforeSceneNavigation();
+    director.loadScene(sceneName);
+  }
+
+  /** 角色导航入口。 */
+  private handleCharacterNavigation(): void {
+    this.navigateToScene("CharacterScene");
+  }
+
   /** 宗门导航入口。 */
   private handleSectClick(): void {
-    console.info("[CultivationController] 宗门入口已点击，宗门 Scene 待接入。");
+    this.navigateToScene("SectScene");
   }
 
   /** 商店导航入口。 */
   private handleShopClick(): void {
-    console.info("[CultivationController] 商店入口已点击，商店 Scene 待接入。");
+    this.navigateToScene("ShopScene");
   }
 
   /** 试炼导航入口。 */
   private handleTrialClick(): void {
-    console.info("[CultivationController] 试炼入口已点击，试炼 Scene 待接入。");
+    this.navigateToScene("TrialScene");
   }
 }

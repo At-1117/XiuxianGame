@@ -13,3 +13,9 @@
 *.mp3 binary
 *.wav binary
 *.ttf binary
+
+*.docx binary
+*.doc binary
+*.xlsx binary
+*.xls binary
+*.pdf binary

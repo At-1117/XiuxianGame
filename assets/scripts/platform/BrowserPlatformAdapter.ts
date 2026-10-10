@@ -37,25 +37,35 @@ export class BrowserPlatformAdapter implements PlatformAdapter {
   }
 }
 
-class BrowserPlatformStorage implements PlatformStorage {
-  private readonly fallbackValues = new Map<string, string>();
+/** 进程内共享回退；确保不同 Scene 创建的适配器仍能读取同一份存档。 */
+const sharedFallbackValues = new Map<string, string>();
 
+class BrowserPlatformStorage implements PlatformStorage {
   public read(key: string): string | null {
     try {
-      return globalThis.localStorage?.getItem(key) ?? null;
+      const value = globalThis.localStorage?.getItem(key) ?? null;
+      if (value !== null) {
+        return value;
+      }
     } catch {
-      return this.fallbackValues.get(key) ?? null;
+      // localStorage 被禁用时继续读取共享回退。
     }
+    return sharedFallbackValues.get(key) ?? null;
   }
 
   public write(key: string, value: string): boolean {
     try {
-      globalThis.localStorage?.setItem(key, value);
-      return true;
+      const localStorage = globalThis.localStorage;
+      if (localStorage) {
+        localStorage.setItem(key, value);
+        sharedFallbackValues.delete(key);
+        return true;
+      }
     } catch {
-      this.fallbackValues.set(key, value);
-      return true;
+      // localStorage 写入失败时继续使用共享回退。
     }
+    sharedFallbackValues.set(key, value);
+    return true;
   }
 
   public remove(key: string): void {
@@ -64,6 +74,6 @@ class BrowserPlatformStorage implements PlatformStorage {
     } catch {
       // Storage cleanup is best-effort; an inaccessible store must not break gameplay.
     }
-    this.fallbackValues.delete(key);
+    sharedFallbackValues.delete(key);
   }
 }
